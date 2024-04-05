@@ -1,4 +1,8 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_curve.hpp"
+namespace tween {
 static inline double ease(int easetype, double t)
 {
     using namespace std;
@@ -13,24 +17,24 @@ static inline double ease(int easetype, double t)
     {
     // Modeled after the line y = x
     default:
-    case TYPE::LINEAR: {
+    case tween::TYPE::LINEAR: {
         return p;
     }
 
     // Modeled after the parabola y = x^2
-    case TYPE::QUADIN: {
+    case tween::TYPE::QUADIN: {
         return p * p;
     }
 
     // Modeled after the parabola y = -x^2 + 2x
-    case TYPE::QUADOUT: {
+    case tween::TYPE::QUADOUT: {
         return -(p * (p - 2));
     }
 
     // Modeled after the piecewise quadratic
     // y = (1/2)((2x)^2)             ; [0, 0.5)
     // y = -(1/2)((2x-1)*(2x-3) - 1) ; [0.5, 1]
-    case TYPE::QUADINOUT: {
+    case tween::TYPE::QUADINOUT: {
         if (p < 0.5)
         {
             return 2 * p * p;
@@ -42,12 +46,12 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after the cubic y = x^3
-    case TYPE::CUBICIN: {
+    case tween::TYPE::CUBICIN: {
         return p * p * p;
     }
 
     // Modeled after the cubic y = (x - 1)^3 + 1
-    case TYPE::CUBICOUT: {
+    case tween::TYPE::CUBICOUT: {
         double f = (p - 1);
         return f * f * f + 1;
     }
@@ -55,7 +59,7 @@ static inline double ease(int easetype, double t)
     // Modeled after the piecewise cubic
     // y = (1/2)((2x)^3)       ; [0, 0.5)
     // y = (1/2)((2x-2)^3 + 2) ; [0.5, 1]
-    case TYPE::CUBICINOUT: {
+    case tween::TYPE::CUBICINOUT: {
         if (p < 0.5)
         {
             return 4 * p * p * p;
@@ -68,12 +72,12 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after the quartic x^4
-    case TYPE::QUARTIN: {
+    case tween::TYPE::QUARTIN: {
         return p * p * p * p;
     }
 
     // Modeled after the quartic y = 1 - (x - 1)^4
-    case TYPE::QUARTOUT: {
+    case tween::TYPE::QUARTOUT: {
         double f = (p - 1);
         return f * f * f * (1 - p) + 1;
     }
@@ -81,7 +85,7 @@ static inline double ease(int easetype, double t)
     // Modeled after the piecewise quartic
     // y = (1/2)((2x)^4)        ; [0, 0.5)
     // y = -(1/2)((2x-2)^4 - 2) ; [0.5, 1]
-    case TYPE::QUARTINOUT: {
+    case tween::TYPE::QUARTINOUT: {
         if (p < 0.5)
         {
             return 8 * p * p * p * p;
@@ -94,12 +98,12 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after the quintic y = x^5
-    case TYPE::QUINTIN: {
+    case tween::TYPE::QUINTIN: {
         return p * p * p * p * p;
     }
 
     // Modeled after the quintic y = (x - 1)^5 + 1
-    case TYPE::QUINTOUT: {
+    case tween::TYPE::QUINTOUT: {
         double f = (p - 1);
         return f * f * f * f * f + 1;
     }
@@ -107,7 +111,7 @@ static inline double ease(int easetype, double t)
     // Modeled after the piecewise quintic
     // y = (1/2)((2x)^5)       ; [0, 0.5)
     // y = (1/2)((2x-2)^5 + 2) ; [0.5, 1]
-    case TYPE::QUINTINOUT: {
+    case tween::TYPE::QUINTINOUT: {
         if (p < 0.5)
         {
             return 16 * p * p * p * p * p;
@@ -120,34 +124,34 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after quarter-cycle of sine wave
-    case TYPE::SINEIN: {
+    case tween::TYPE::SINEIN: {
         return sin((p - 1) * pi2) + 1;
     }
 
     // Modeled after quarter-cycle of sine wave (different phase)
-    case TYPE::SINEOUT: {
+    case tween::TYPE::SINEOUT: {
         return sin(p * pi2);
     }
 
     // Modeled after half sine wave
-    case TYPE::SINEINOUT: {
+    case tween::TYPE::SINEINOUT: {
         return 0.5 * (1 - cos(p * pi));
     }
 
     // Modeled after shifted quadrant IV of unit circle
-    case TYPE::CIRCIN: {
+    case tween::TYPE::CIRCIN: {
         return 1 - sqrt(1 - (p * p));
     }
 
     // Modeled after shifted quadrant II of unit circle
-    case TYPE::CIRCOUT: {
+    case tween::TYPE::CIRCOUT: {
         return sqrt((2 - p) * p);
     }
 
     // Modeled after the piecewise circular function
     // y = (1/2)(1 - sqrt(1 - 4x^2))           ; [0, 0.5)
     // y = (1/2)(sqrt(-(2x - 3)*(2x - 1)) + 1) ; [0.5, 1]
-    case TYPE::CIRCINOUT: {
+    case tween::TYPE::CIRCINOUT: {
         if (p < 0.5)
         {
             return 0.5 * (1 - sqrt(1 - 4 * (p * p)));
@@ -159,19 +163,19 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after the exponential function y = 2^(10(x - 1))
-    case TYPE::EXPOIN: {
+    case tween::TYPE::EXPOIN: {
         return (p == 0.0) ? p : pow(2, 10 * (p - 1));
     }
 
     // Modeled after the exponential function y = -2^(-10x) + 1
-    case TYPE::EXPOOUT: {
+    case tween::TYPE::EXPOOUT: {
         return (p == 1.0) ? p : 1 - pow(2, -10 * p);
     }
 
     // Modeled after the piecewise exponential
     // y = (1/2)2^(10(2x - 1))         ; [0,0.5)
     // y = -(1/2)*2^(-10(2x - 1))) + 1 ; [0.5,1]
-    case TYPE::EXPOINOUT: {
+    case tween::TYPE::EXPOINOUT: {
         if (p == 0.0 || p == 1.0)
             return p;
 
@@ -186,19 +190,19 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled after the damped sine wave y = sin(13pi/2*x)*pow(2, 10 * (x - 1))
-    case TYPE::ELASTICIN: {
+    case tween::TYPE::ELASTICIN: {
         return sin(13 * pi2 * p) * pow(2, 10 * (p - 1));
     }
 
     // Modeled after the damped sine wave y = sin(-13pi/2*(x + 1))*pow(2, -10x) + 1
-    case TYPE::ELASTICOUT: {
+    case tween::TYPE::ELASTICOUT: {
         return sin(-13 * pi2 * (p + 1)) * pow(2, -10 * p) + 1;
     }
 
     // Modeled after the piecewise exponentially-damped sine wave:
     // y = (1/2)*sin(13pi/2*(2*x))*pow(2, 10 * ((2*x) - 1))      ; [0,0.5)
     // y = (1/2)*(sin(-13pi/2*((2x-1)+1))*pow(2,-10(2*x-1)) + 2) ; [0.5, 1]
-    case TYPE::ELASTICINOUT: {
+    case tween::TYPE::ELASTICINOUT: {
         if (p < 0.5)
         {
             return 0.5 * sin(13 * pi2 * (2 * p)) * pow(2, 10 * ((2 * p) - 1));
@@ -210,14 +214,14 @@ static inline double ease(int easetype, double t)
     }
 
     // Modeled (originally) after the overshooting cubic y = x^3-x*sin(x*pi)
-    case TYPE::BACKIN: { /*
+    case tween::TYPE::BACKIN: { /*
         return p * p * p - p * sin(p * pi); */
         double s = 1.70158f;
         return p * p * ((s + 1) * p - s);
     }
 
     // Modeled (originally) after overshooting cubic y = 1-((1-x)^3-(1-x)*sin((1-x)*pi))
-    case TYPE::BACKOUT: { /*
+    case tween::TYPE::BACKOUT: { /*
         double f = (1 - p);
         return 1 - (f * f * f - f * sin(f * pi)); */
         double s = 1.70158f;
@@ -227,7 +231,7 @@ static inline double ease(int easetype, double t)
     // Modeled (originally) after the piecewise overshooting cubic function:
     // y = (1/2)*((2x)^3-(2x)*sin(2*x*pi))           ; [0, 0.5)
     // y = (1/2)*(1-((1-x)^3-(1-x)*sin((1-x)*pi))+1) ; [0.5, 1]
-    case TYPE::BACKINOUT: { /*
+    case tween::TYPE::BACKINOUT: { /*
         if(p < 0.5) {
             double f = 2 * p;
             return 0.5 * (f * f * f - f * sin(f * pi));
@@ -253,15 +257,15 @@ static inline double ease(int easetype, double t)
      : (p) < 9 / 10.0 ? (4356 / 361.0 * (p) * (p)) - (35442 / 1805.0 * (p)) + 16061 / 1805.0                           \
                       : (54 / 5.0 * (p) * (p)) - (513 / 25.0 * (p)) + 268 / 25.0)
 
-    case TYPE::BOUNCEIN: {
+    case tween::TYPE::BOUNCEIN: {
         return 1 - tween$bounceout(1 - p);
     }
 
-    case TYPE::BOUNCEOUT: {
+    case tween::TYPE::BOUNCEOUT: {
         return tween$bounceout(p);
     }
 
-    case TYPE::BOUNCEINOUT: {
+    case tween::TYPE::BOUNCEINOUT: {
         if (p < 0.5)
         {
             return 0.5 * (1 - tween$bounceout(1 - p * 2));
@@ -274,37 +278,37 @@ static inline double ease(int easetype, double t)
 
 #undef tween$bounceout
 
-    case TYPE::SINESQUARE: {
+    case tween::TYPE::SINESQUARE: {
         double A = sin((p)*pi2);
         return A * A;
     }
 
-    case TYPE::EXPONENTIAL: {
+    case tween::TYPE::EXPONENTIAL: {
         return 1 / (1 + exp(6 - 12 * (p)));
     }
 
-    case TYPE::SCHUBRING1: {
+    case tween::TYPE::SCHUBRING1: {
         return 2 * (p + (0.5f - p) * abs(0.5f - p)) - 0.5f;
     }
 
-    case TYPE::SCHUBRING2: {
+    case tween::TYPE::SCHUBRING2: {
         double p1pass = 2 * (p + (0.5f - p) * abs(0.5f - p)) - 0.5f;
         double p2pass = 2 * (p1pass + (0.5f - p1pass) * abs(0.5f - p1pass)) - 0.5f;
         double pAvg = (p1pass + p2pass) / 2;
         return pAvg;
     }
 
-    case TYPE::SCHUBRING3: {
+    case tween::TYPE::SCHUBRING3: {
         double p1pass = 2 * (p + (0.5f - p) * abs(0.5f - p)) - 0.5f;
         double p2pass = 2 * (p1pass + (0.5f - p1pass) * abs(0.5f - p1pass)) - 0.5f;
         return p2pass;
     }
 
-    case TYPE::SWING: {
+    case tween::TYPE::SWING: {
         return ((-cos(pi * p) * 0.5) + 0.5);
     }
 
-    case TYPE::SINPI2: {
+    case tween::TYPE::SINPI2: {
         return sin(p * pi2);
     }
     }
@@ -434,14 +438,14 @@ int Curve(const char* label, const ImVec2& size, const int maxpoints, ImVec2* po
 
     ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
     ItemSize(bb);
-    if (!ItemAdd(bb, NULL))
+    if (!ItemAdd(bb, id))
         return 0;
 
     PushID(label);
 
     int currentSelection = selection ? *selection : -1;
 
-    const bool hovered = ImGui::ItemHoverable(bb, id);
+    const bool hovered = ImGui::ItemHoverable(bb, id, g.LastItemData.InFlags);
 
     int pointCount = 0;
     while (pointCount < maxpoints && points[pointCount].x >= rangeMin.x)

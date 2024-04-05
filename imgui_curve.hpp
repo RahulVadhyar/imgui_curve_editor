@@ -1,3 +1,5 @@
+// [src] https://gist.github.com/SoapyMan/1d32b56dd267e7cd9a2408047fd5c90c
+// [src] https://github.com/ocornut/imgui/issues/786
 // [src] https://github.com/ocornut/imgui/issues/123
 // [src] https://github.com/ocornut/imgui/issues/55
 
@@ -9,12 +11,6 @@
 // v1.00 - jari komppa's original
 
 #pragma once
-
-#include "imgui.h"
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h"
-
 #include <cmath>
 
 /* To use, add this prototype somewhere..
@@ -94,6 +90,6 @@ enum TYPE
     SWING,  // tomas cepeda's & lquery's
 };
 
-// }
+};
 
 // implementation
